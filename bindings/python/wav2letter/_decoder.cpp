@@ -10,6 +10,7 @@
 #include <pybind11/stl.h>
 
 #include "libraries/decoder/LexiconDecoder.h"
+#include "libraries/decoder/LexiconFreeDecoder.h"
 
 #ifdef W2L_LIBRARIES_USE_KENLM
 #include "libraries/lm/KenLM.h"
@@ -112,7 +113,24 @@ std::vector<DecodeResult> LexiconDecoder_decode(
   return decoder.decode(reinterpret_cast<const float*>(emissions), T, N);
 }
 
+void LexiconFreeDecoder_decodeStep(
+    LexiconFreeDecoder& decoder,
+    uintptr_t emissions,
+    int T,
+    int N) {
+  decoder.decodeStep(reinterpret_cast<const float*>(emissions), T, N);
+}
+
+std::vector<DecodeResult> LexiconFreeDecoder_decode(
+    LexiconFreeDecoder& decoder,
+    uintptr_t emissions,
+    int T,
+    int N) {
+  return decoder.decode(reinterpret_cast<const float*>(emissions), T, N);
+}
+
 } // namespace
+
 
 PYBIND11_MODULE(_decoder, m) {
   py::enum_<SmearingMode>(m, "SmearingMode")
@@ -227,4 +245,28 @@ PYBIND11_MODULE(_decoder, m) {
           &LexiconDecoder::getBestHypothesis,
           "look_back"_a = 0)
       .def("get_all_final_hypothesis", &LexiconDecoder::getAllFinalHypothesis);
+
+  py::class_<LexiconFreeDecoder>(m, "LexiconFreeDecoder")
+      .def(py::init<
+           const DecoderOptions&,
+           const LMPtr,
+           const int,
+           const int,
+           const std::vector<float>&>())
+      .def("decode_begin", &LexiconFreeDecoder::decodeBegin)
+      .def(
+          "decode_step",
+          &LexiconFreeDecoder_decodeStep,
+          "emissions"_a,
+          "T"_a,
+          "N"_a)
+      .def("decode_end", &LexiconFreeDecoder::decodeEnd)
+      .def("decode", &LexiconFreeDecoder_decode, "emissions"_a, "T"_a, "N"_a)
+      .def("prune", &LexiconFreeDecoder::prune, "look_back"_a = 0)
+      .def(
+          "get_best_hypothesis",
+          &LexiconFreeDecoder::getBestHypothesis,
+          "look_back"_a = 0)
+      .def("get_all_final_hypothesis", &LexiconFreeDecoder::getAllFinalHypothesis);
+
 }
