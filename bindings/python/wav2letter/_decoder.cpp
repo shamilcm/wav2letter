@@ -267,6 +267,7 @@ PYBIND11_MODULE(_decoder, m) {
           "get_best_hypothesis",
           &LexiconFreeDecoder::getBestHypothesis,
           "look_back"_a = 0)
-      .def("get_all_final_hypothesis", &LexiconFreeDecoder::getAllFinalHypothesis);
-
+      .def(
+          "get_all_final_hypothesis",
+          &LexiconFreeDecoder::getAllFinalHypothesis);
 }
